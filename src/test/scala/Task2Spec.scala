@@ -8,7 +8,7 @@ import org.scalatest._
 
 class Task2Spec extends FlatSpec with Matchers {
   "addition only" should "work" in {
-    Task2.findExpression(Seq(2, 1, 4), 3) shouldBe "1 + 2"
+    Task2.findExpression(Seq(2, 1, 4), 3) shouldBe "2 + 1"
   }
 
   "example" should "return (2 + 5) * 6" in {

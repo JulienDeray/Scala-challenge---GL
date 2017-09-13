@@ -6,11 +6,24 @@ object Task2 {
 
   def findExpression(ns: Seq[Int], target: Int): String = {
     case class Affine(x: Int, y: Int = 0, z: Int = 1) {
-      override def toString: String = super.toString
+      override def toString: String = {
+        val left = y match {
+          case 0 => x.toString
+          case _ => s"$x + $y"
+        }
 
-      def test(): Option[Affine] = result() match {
-        case n if n == target => Some(this)
-        case _                => None
+        z match {
+          case 1 => left
+          case _ => s"($left) * $z"
+        }
+      }
+
+      def test(): Option[Affine] = {
+        println(this.toString + " => " + result() + " " + (result() == target))
+        result() match {
+          case n if n == target => Some(this)
+          case _                => None
+        }
       }
 
       def result(): Int = (x + y) * z
@@ -24,7 +37,12 @@ object Task2 {
     }
 
     def testCombination(i: Int): Option[Affine] = {
-      ns.combinations(i).foldLeft[Option[Affine]](None) { case (_, next) => testPermutations(next.toList) } match {
+      ns
+        .combinations(i)
+        .foldLeft[Option[Affine]](None) {
+          case (Some(res), _)    => Some(res)
+          case (None     , next) => testPermutations(next.toList)
+        } match {
         case Some(res) => Some(res)
         case None if i <= 3 => testCombination(i + 1)
         case None => None
