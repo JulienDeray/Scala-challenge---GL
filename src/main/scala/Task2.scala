@@ -7,50 +7,84 @@ import scala.annotation.tailrec
 object Task2 {
 
   def findExpression(ns: Seq[Int], target: Int): String = {
-    case class Affine(x: Int, y: Int = 0, z: Int = 1) {
-      override def toString: String = {
-        val left = y match {
-          case 0 => x.toString
-          case y if y < 0 => s"$x - ${y.abs}"
-          case _          => s"$x + $y"
-        }
-
-        z match {
-          case 1           => left
-          case _ if y == 0 => s"$left * $z"
-          case _           => s"($left) * $z"
-        }
+    sealed trait Expression {
+      def result: Int
+    }
+    case class Number(n: Int) extends Expression {
+      def result: Int = n
+      override def toString: String = n.toString
+    }
+    case class Operation(x: Expression, y: Expression, op: Operator) extends Expression {
+      def result: Int = op.exec(x.result, y.result)
+      override def toString: String = op match {
+        case Multiplication =>
+          val right = y match {
+            case Operation(_, _, Multiplication) => " " + y.toString
+            case _: Operation => " (" + y.toString + ")"
+            case _ => " " + y.toString
+          }
+          val left = x match {
+            case Operation(_, _, Multiplication) => x.toString + " "
+            case _: Operation => " (" + x.toString + ")"
+            case _ => x.toString + " "
+          }
+          left + op.toString + right
+        case _ => x.toString + " " + op.toString + " " + y.toString
       }
-
-      def test(): Option[Affine] = {
-        result() match {
-          case n if n == target => Some(this)
-          case _                =>
-            val subtraction = withSubtraction()
-            subtraction.result() match {
-              case m if m == target => Some(subtraction)
-              case _                => None
-            }
-        }
-      }
-
-      def result(): Int = (x + y) * z
-
-      def withSubtraction(): Affine = this.copy(y = -y)
     }
 
-    def testPermutations: List[Int] => Option[Affine] = {
-      case Nil                  => None
-      case (x :: Nil)           => Affine(x).test()
-      case (x :: y :: Nil)      => Affine(x, y).test() orElse Affine(x, z = y).test()
-      case (x :: y :: z :: _)   => Affine(x, y, z).test()
+    sealed trait Operator { def exec(x: Int, y: Int): Int }
+    case object Addition extends Operator {
+      def exec(x: Int, y: Int): Int = x + y
+      override def toString: String = "+"
+    }
+    case object Subtraction extends Operator {
+      def exec(x: Int, y: Int): Int = x - y
+      override def toString: String = "-"
+    }
+    case object Multiplication extends Operator {
+      def exec(x: Int, y: Int): Int = x * y
+      override def toString: String = "*"
+    }
+    case object NoOp extends Operator {
+      def exec(x: Int, y: Int): Int = -1 // to fill the zip, not used in calculations
+      override def toString: String = "/!\\"
+    }
+
+    def testPermutation(permutation: List[Int]): Option[String] = {
+      val operatorsPermutations = (
+          Seq.fill(permutation.length - 1)(Addition) ++
+          Seq.fill(permutation.length - 1)(Subtraction) ++
+          Seq.fill(permutation.length - 1)(Multiplication)
+        ).combinations(permutation.length - 1).flatMap(_.permutations).toSeq
+
+      operatorsPermutations.foldLeft[Option[String]](None) {
+        case (Some(res), _) => Some(res)
+        case (None, ops) =>
+          val binaryTree = buildBinaryTree(permutation.zipAll(ops, 0, NoOp))
+          if (binaryTree.result == target) Some(binaryTree.toString)
+          else None
+      }
+    }
+
+    def buildBinaryTree: List[(Int, Operator)] => Expression = {
+      case Nil => Number(0) // should never happen
+      case (n, NoOp) :: Nil => Number(n)
+      case (n, op) :: xs => Operation(Number(n), buildBinaryTree(xs), op)
+    }
+
+    def testPermutations(combination: List[Int]): Option[String] = {
+      combination.permutations.foldLeft[Option[String]](None) {
+        case (Some(res), _)           => Some(res)
+        case (None     , permutation) => testPermutation(permutation)
+      }
     }
 
     @tailrec
-    def testCombination(i: Int): Option[Affine] = {
+    def testCombination(i: Int): Option[String] = {
       ns
         .combinations(i)
-        .foldLeft[Option[Affine]](None) {
+        .foldLeft[Option[String]](None) {
           case (Some(res), _)    => Some(res)
           case (None     , next) => testPermutations(next.toList)
         }
