@@ -9,7 +9,8 @@ object Task2 {
       override def toString: String = {
         val left = y match {
           case 0 => x.toString
-          case _ => s"$x + $y"
+          case y if y < 0 => s"$x - ${y.abs}"
+          case _          => s"$x + $y"
         }
 
         z match {
@@ -19,21 +20,27 @@ object Task2 {
       }
 
       def test(): Option[Affine] = {
-        println(this.toString + " => " + result() + " " + (result() == target))
         result() match {
           case n if n == target => Some(this)
-          case _                => None
+          case _                =>
+            val subtraction = withSubtraction()
+            subtraction.result() match {
+              case m if m == target => Some(subtraction)
+              case _                => None
+            }
         }
       }
 
       def result(): Int = (x + y) * z
+
+      def withSubtraction(): Affine = this.copy(y = -y)
     }
 
     def testPermutations: List[Int] => Option[Affine] = {
       case Nil                  => None
       case (x :: Nil)           => Affine(x).test()
       case (x :: y :: Nil)      => Affine(x, y).test()
-      case (x :: y :: z :: _) => Affine(x, y, z).test()
+      case (x :: y :: z :: _)   => Affine(x, y, z).test()
     }
 
     def testCombination(i: Int): Option[Affine] = {
@@ -42,11 +49,12 @@ object Task2 {
         .foldLeft[Option[Affine]](None) {
           case (Some(res), _)    => Some(res)
           case (None     , next) => testPermutations(next.toList)
-        } match {
-        case Some(res) => Some(res)
-        case None if i <= 3 => testCombination(i + 1)
-        case None => None
-      }
+        }
+        match {
+          case Some(res)      => Some(res)
+          case None if i <= 3 => testCombination(i + 1)
+          case None           => None
+        }
     }
 
     testCombination(0).fold("No expression found")(_.toString)
