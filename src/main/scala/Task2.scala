@@ -1,3 +1,5 @@
+import scala.annotation.tailrec
+
 /**
   * @author : julienderay
   * Created on 13/09/2017
@@ -43,6 +45,7 @@ object Task2 {
       case (x :: y :: z :: _)   => Affine(x, y, z).test()
     }
 
+    @tailrec
     def testCombination(i: Int): Option[Affine] = {
       ns
         .combinations(i)
