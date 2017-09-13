@@ -16,6 +16,10 @@ class Task2Spec extends FlatSpec with Matchers {
   }
 
   "subtraction" should "return (7 - 1) * 2" in {
-    Task2.findExpression(Seq(7, 1, 2, 6), 12) shouldBe "(7 - 1) * 2"
+    Task2.findExpression(Seq(7, 1, 2), 12) shouldBe "(7 - 1) * 2"
+  }
+
+  "multiplication only" should "return 4 * 6" in {
+    Task2.findExpression(Seq(4, 2, 6, 6), 24) shouldBe "4 * 6"
   }
 }

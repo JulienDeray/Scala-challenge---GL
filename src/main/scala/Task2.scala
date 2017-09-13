@@ -16,8 +16,9 @@ object Task2 {
         }
 
         z match {
-          case 1 => left
-          case _ => s"($left) * $z"
+          case 1           => left
+          case _ if y == 0 => s"$left * $z"
+          case _           => s"($left) * $z"
         }
       }
 
@@ -41,7 +42,7 @@ object Task2 {
     def testPermutations: List[Int] => Option[Affine] = {
       case Nil                  => None
       case (x :: Nil)           => Affine(x).test()
-      case (x :: y :: Nil)      => Affine(x, y).test()
+      case (x :: y :: Nil)      => Affine(x, y).test() orElse Affine(x, z = y).test()
       case (x :: y :: z :: _)   => Affine(x, y, z).test()
     }
 
