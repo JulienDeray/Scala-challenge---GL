@@ -1,5 +1,7 @@
 # Scala challenge (GL)
 
+Each task comes with an object and a suite of tests. All tests can be ran with `sbt test`.
+
 ## Task 1
 
 The proposed implementation takes full advantage of Scala's functional programming techniques, though the algorithm could be optimised:
